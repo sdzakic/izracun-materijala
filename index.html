@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Izračun materijala</title>
+  <meta name="description" content="Jednostavan izračun količine zidnih blokova, crijepa i drvene konstrukcije krova.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b5532f'/%3E%3Cpath d='M6 15 16 7l10 8v10H6z' fill='none' stroke='white' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="screen">
+    <header class="top">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M6 15 16 7l10 8v10H6z"/></svg>
+        </span>
+        <div>
+          <h1>Izračun materijala</h1>
+          <p class="muted">Zidni blokovi, crijep i drvena konstrukcija krova</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input class="project" type="text" data-bind="projekt" placeholder="Naziv projekta (neobavezno)" aria-label="Naziv projekta">
+        <label class="switch">
+          <input type="checkbox" data-bind="prikaziCijene">
+          <span class="track"><span class="thumb"></span></span>
+          <span>Cijene</span>
+        </label>
+        <button class="btn" id="btn-print" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>
+          Ispiši
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ============ BLOKOVI ============ -->
+      <section class="card" id="sec-blok">
+        <div class="card-head">
+          <h2><span class="num-badge">1</span> Zidanje blokovima</h2>
+          <label class="check"><input type="checkbox" data-bind="blok.ispis"> Uključi u ispis</label>
+        </div>
+
+        <div class="cols">
+          <div class="form">
+            <label class="field">
+              <span>Vrsta bloka</span>
+              <select data-bind="blok.tip" id="blok-tip"></select>
+            </label>
+            <p class="hint" id="blok-info"></p>
+
+            <div class="group" id="blok-custom" hidden>
+              <div class="grid-4">
+                <label class="field"><span>Duljina</span><div class="iu"><input type="number" min="1" step="0.1" data-bind="blok.custom.duljina"><em>cm</em></div></label>
+                <label class="field"><span>Visina</span><div class="iu"><input type="number" min="1" step="0.1" data-bind="blok.custom.visina"><em>cm</em></div></label>
+                <label class="field"><span>Debljina</span><div class="iu"><input type="number" min="1" step="0.1" data-bind="blok.custom.debljina"><em>cm</em></div></label>
+                <label class="field"><span>Fuga</span><div class="iu"><input type="number" min="0" step="1" data-bind="blok.custom.fuga"><em>mm</em></div></label>
+              </div>
+            </div>
+
+            <div class="list-block">
+              <div class="list-title">Zidovi</div>
+              <div class="list-head list-cols-3"><span>Naziv</span><span>Duljina</span><span>Visina</span><span></span></div>
+              <div class="list" id="list-zidovi"></div>
+              <button type="button" class="btn-ghost" data-add="zidovi">+ Dodaj zid</button>
+            </div>
+
+            <div class="list-block">
+              <div class="list-title">Otvori <span class="muted">(prozori, vrata — oduzimaju se)</span></div>
+              <div class="list-head list-cols-4"><span>Naziv</span><span>Širina</span><span>Visina</span><span>Kom</span><span></span></div>
+              <div class="list" id="list-otvori"></div>
+              <button type="button" class="btn-ghost" data-add="otvori">+ Dodaj otvor</button>
+            </div>
+
+            <div class="grid-2">
+              <label class="field"><span>Dodatak za lom / otpad</span><div class="iu"><input type="number" min="0" step="1" data-bind="blok.otpad"><em>%</em></div></label>
+            </div>
+
+            <details class="adv">
+              <summary>Parametri bloka i veziva</summary>
+              <div class="grid-2">
+                <label class="field"><span>Potrošnja blokova</span><div class="iu"><input type="number" min="0" step="0.1" data-bind="blok.komM2" id="blok-komM2"><em>kom/m²</em></div></label>
+                <label class="field"><span>Debljina zida</span><div class="iu"><input type="number" min="0" step="0.5" data-bind="blok.debljina"><em>cm</em></div></label>
+                <label class="field"><span>Komada na paleti</span><div class="iu"><input type="number" min="0" step="1" data-bind="blok.paleta"><em>kom</em></div></label>
+                <label class="field"><span>Potrošnja veziva</span><div class="iu"><input type="number" min="0" step="0.5" data-bind="blok.vezivo"><em>kg/m²</em></div></label>
+                <label class="field"><span>Pakiranje veziva</span><div class="iu"><input type="number" min="1" step="1" data-bind="blok.vreca"><em>kg</em></div></label>
+              </div>
+            </details>
+
+            <div class="prices">
+              <div class="list-title">Cijene</div>
+              <div class="grid-2">
+                <label class="field"><span>Blok</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="blok.cijenaBlok"><em>€/kom</em></div></label>
+                <label class="field"><span>Mort / ljepilo</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="blok.cijenaVezivo"><em>€/vreća</em></div></label>
+              </div>
+            </div>
+          </div>
+
+          <aside class="result" id="res-blok"></aside>
+        </div>
+      </section>
+
+      <!-- ============ KROV ============ -->
+      <section class="card" id="sec-krov">
+        <div class="card-head">
+          <h2><span class="num-badge">2</span> Krov</h2>
+          <label class="check"><input type="checkbox" data-bind="krov.ispis"> Uključi u ispis</label>
+        </div>
+
+        <div class="cols">
+          <div class="form">
+            <div class="field">
+              <span>Oblik krova</span>
+              <div class="shapes" role="radiogroup">
+                <label class="shape"><input type="radio" name="oblik" value="jednostresni" data-bind="krov.oblik">
+                  <svg viewBox="0 0 40 32"><path d="M4 28V18L36 7v21z"/></svg><span>Jednostrešni</span></label>
+                <label class="shape"><input type="radio" name="oblik" value="dvostresni" data-bind="krov.oblik">
+                  <svg viewBox="0 0 40 32"><path d="M4 28V16L20 5l16 11v12z"/></svg><span>Dvostrešni</span></label>
+                <label class="shape"><input type="radio" name="oblik" value="cetverostresni" data-bind="krov.oblik">
+                  <svg viewBox="0 0 40 32"><path d="M4 28V18l8-10h16l8 10v10z"/></svg><span>Četverostrešni</span></label>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <label class="field"><span>Duljina objekta</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="krov.duljina"><em>m</em></div></label>
+              <label class="field"><span>Širina objekta <small class="muted">(u smjeru pada)</small></span><div class="iu"><input type="number" min="0" step="0.01" data-bind="krov.sirina"><em>m</em></div></label>
+              <label class="field"><span>Nagib krova</span><div class="iu"><input type="number" min="5" max="75" step="1" data-bind="krov.nagib"><em>°</em></div></label>
+              <label class="field"><span>Prepust strehe</span><div class="iu"><input type="number" min="0" step="1" data-bind="krov.prepustStreha"><em>cm</em></div></label>
+              <label class="field" id="f-zabat"><span>Prepust zabata</span><div class="iu"><input type="number" min="0" step="1" data-bind="krov.prepustZabat"><em>cm</em></div></label>
+            </div>
+
+            <label class="field">
+              <span>Vrsta crijepa</span>
+              <select data-bind="krov.crijep" id="krov-crijep"></select>
+            </label>
+
+            <div class="grid-2">
+              <label class="field"><span>Dodatak za lom / otpad</span><div class="iu"><input type="number" min="0" step="1" data-bind="krov.otpad"><em>%</em></div></label>
+            </div>
+
+            <details class="adv">
+              <summary>Parametri crijepa</summary>
+              <div class="grid-2">
+                <label class="field"><span>Potrošnja crijepa</span><div class="iu"><input type="number" min="0" step="0.1" data-bind="krov.komM2"><em>kom/m²</em></div></label>
+                <label class="field"><span>Razmak letava</span><div class="iu"><input type="number" min="1" step="0.5" data-bind="krov.letvanje"><em>cm</em></div></label>
+                <label class="field"><span>Sljemenjaci</span><div class="iu"><input type="number" min="0" step="0.1" data-bind="krov.sljemeKpm"><em>kom/m'</em></div></label>
+              </div>
+            </details>
+
+            <label class="check big"><input type="checkbox" data-bind="krov.grede"> Izračunaj i drvenu konstrukciju (rogovi, grede, letve, folija)</label>
+
+            <div class="group" id="grede-fields">
+              <div class="grid-2">
+                <label class="field"><span>Razmak rogova</span><div class="iu"><input type="number" min="30" step="1" data-bind="krov.razmak"><em>cm</em></div></label>
+                <label class="field"><span>Presjek rogova</span><select data-bind="krov.presjekRog" class="presjek"></select></label>
+                <label class="field"><span>Presjek greda <small class="muted">(nazidnica, sljeme)</small></span><select data-bind="krov.presjekGreda" class="presjek"></select></label>
+                <label class="field"><span>Dodatak za drvo</span><div class="iu"><input type="number" min="0" step="1" data-bind="krov.otpadDrvo"><em>%</em></div></label>
+              </div>
+            </div>
+
+            <div class="prices">
+              <div class="list-title">Cijene</div>
+              <div class="grid-2">
+                <label class="field"><span>Crijep</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="krov.cijenaCrijep"><em>€/kom</em></div></label>
+                <label class="field"><span>Sljemenjak</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="krov.cijenaSljeme"><em>€/kom</em></div></label>
+                <label class="field wood"><span>Građa (rogovi, grede)</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="krov.cijenaDrvo"><em>€/m³</em></div></label>
+                <label class="field wood"><span>Letve / kontraletve</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="krov.cijenaLetve"><em>€/m'</em></div></label>
+                <label class="field wood"><span>Krovna folija</span><div class="iu"><input type="number" min="0" step="0.01" data-bind="krov.cijenaFolija"><em>€/m²</em></div></label>
+              </div>
+            </div>
+          </div>
+
+          <aside class="result" id="res-krov"></aside>
+        </div>
+      </section>
+
+      <section class="total-bar prices" id="total-bar"></section>
+
+      <p class="disclaimer">Izračun je okviran. Potrošnja materijala ovisi o proizvođaču — provjerite podatke kod dobavljača. Dimenzioniranje drvene konstrukcije krova treba potvrditi ovlašteni inženjer.</p>
+    </main>
+  </div>
+
+  <div id="print-view" aria-hidden="true"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
