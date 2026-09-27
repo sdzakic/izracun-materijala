@@ -38,10 +38,13 @@ function defaultState() {
   const b = BLOKOVI[0], c = CRIJEP[0];
   return {
     projekt: '',
+    tema: 'dark',
     prikaziCijene: true,
     blok: {
       ispis: true,
       tip: b.id,
+      nacin: 'objekt',
+      objekt: { duljina: 10, sirina: 8, visina: 2.8 },
       custom: { duljina: 50, visina: 25, debljina: 25, fuga: 10 },
       zidovi: [{ naziv: 'Zid 1', duljina: 10, visina: 2.8 }],
       otvori: [{ naziv: 'Prozor', sirina: 1.2, visina: 1.4, kom: 2 }],
@@ -55,7 +58,7 @@ function defaultState() {
       duljina: 10, sirina: 8, nagib: 30, prepustStreha: 50, prepustZabat: 30,
       crijep: c.id, komM2: c.komM2, letvanje: c.letvanje, sljemeKpm: c.sljemeKpm,
       otpad: 5,
-      grede: true, razmak: 80, presjekRog: '10×16', presjekGreda: '14×18', otpadDrvo: 10,
+      grede: false, razmak: 80, presjekRog: '10×16', presjekGreda: '14×18', otpadDrvo: 10,
       cijenaCrijep: 0, cijenaSljeme: 0, cijenaDrvo: 0, cijenaLetve: 0, cijenaFolija: 0,
     },
   };
@@ -114,8 +117,12 @@ const presjek = s => s.split('×').map(x => num(x) / 100);
 function izracunBlok() {
   const b = state.blok;
   const tip = BLOKOVI.find(t => t.id === b.tip) ?? BLOKOVI[0];
-  const bruto = b.zidovi.reduce((s, z) => s + num(z.duljina) * num(z.visina), 0);
-  const otvori = b.otvori.reduce((s, o) => s + num(o.sirina) * num(o.visina) * num(o.kom), 0);
+  const poObjektu = b.nacin === 'objekt';
+  const opseg = 2 * (num(b.objekt.duljina) + num(b.objekt.sirina));
+  const bruto = poObjektu
+    ? opseg * num(b.objekt.visina)
+    : b.zidovi.reduce((s, z) => s + num(z.duljina) * num(z.visina), 0);
+  const otvori = poObjektu ? 0 : b.otvori.reduce((s, o) => s + num(o.sirina) * num(o.visina) * num(o.kom), 0);
   const neto = Math.max(0, bruto - otvori);
   const faktor = 1 + num(b.otpad) / 100;
 
@@ -137,7 +144,7 @@ function izracunBlok() {
   ];
 
   return {
-    tip, bruto, otvori, neto, volumen, palete, blokova, stavke,
+    tip, poObjektu, opseg, bruto, otvori, neto, volumen, palete, blokova, stavke,
     ukupno: stavke.reduce((s, x) => s + x.kolicina * x.cijena, 0),
   };
 }
@@ -260,7 +267,7 @@ const facts = list => `<dl class="facts">${list.map(([k, v]) => `<dt>${k}</dt><d
 function renderBlok(r) {
   const el = $('#res-blok');
   if (r.neto <= 0) {
-    el.innerHTML = '<p class="empty">Unesite dimenzije zidova za izračun.</p>';
+    el.innerHTML = `<p class="empty">Unesite dimenzije ${state.blok.nacin === 'objekt' ? 'objekta' : 'zidova'} za izračun.</p>`;
     return;
   }
   el.innerHTML =
@@ -270,8 +277,8 @@ function renderBlok(r) {
       ${stat('Palete', fmt(r.palete, 1), 'kom')}
     </div>` +
     facts([
-      ['Bruto površina zidova', `${fmt(r.bruto, 2)} m²`],
-      ['Otvori', `− ${fmt(r.otvori, 2)} m²`],
+      r.poObjektu ? ['Opseg objekta', `${fmt(r.opseg, 2)} m`] : ['Bruto površina zidova', `${fmt(r.bruto, 2)} m²`],
+      ...(r.poObjektu ? [] : [['Otvori', `− ${fmt(r.otvori, 2)} m²`]]),
       ['Volumen zida', `${fmt(r.volumen, 2)} m³`],
     ]) +
     tablica(r.stavke, r.ukupno);
@@ -333,6 +340,9 @@ function populate() {
 
 function update() {
   document.body.classList.toggle('no-prices', !state.prikaziCijene);
+  document.documentElement.dataset.theme = state.tema;
+  $('#blok-objekt').hidden = state.blok.nacin !== 'objekt';
+  $('#blok-zidovi').hidden = state.blok.nacin === 'objekt';
 
   const tip = BLOKOVI.find(t => t.id === state.blok.tip);
   $('#blok-custom').hidden = state.blok.tip !== 'custom';
@@ -342,6 +352,9 @@ function update() {
   $$('.field.wood').forEach(el => (el.hidden = !state.krov.grede));
 
   const rb = izracunBlok(), rk = izracunKrov();
+  $('#objekt-info').textContent = rb.poObjektu
+    ? `Opseg ${fmt(rb.opseg, 2)} m × visina = ${fmt(rb.bruto, 2)} m² zidova. Otvori se ne oduzimaju — za to odaberite unos po zidovima.`
+    : '';
   renderBlok(rb);
   renderKrov(rk);
   renderTotal(rb, rk);
@@ -372,9 +385,12 @@ function buildPrint() {
         <h2>Zidanje blokovima</h2>
         <p class="pv-inputs">
           Blok: ${esc(tip)}<br>
-          Zidovi: ${zidovi}<br>
-          ${otvori ? `Otvori: ${otvori}<br>` : ''}
-          Površina: bruto ${fmt(rb.bruto, 2)} m², otvori ${fmt(rb.otvori, 2)} m², <strong>neto ${fmt(rb.neto, 2)} m²</strong> · palete ≈ ${fmt(rb.palete, 1)}
+          ${rb.poObjektu
+            ? `Objekt: ${fmt(num(b.objekt.duljina), 2)} × ${fmt(num(b.objekt.sirina), 2)} m, visina zidova ${fmt(num(b.objekt.visina), 2)} m (opseg ${fmt(rb.opseg, 2)} m)<br>
+               <strong>Površina zidova ${fmt(rb.neto, 2)} m²</strong> (bez odbitka otvora) · palete ≈ ${fmt(rb.palete, 1)}`
+            : `Zidovi: ${zidovi}<br>
+               ${otvori ? `Otvori: ${otvori}<br>` : ''}
+               Površina: bruto ${fmt(rb.bruto, 2)} m², otvori ${fmt(rb.otvori, 2)} m², <strong>neto ${fmt(rb.neto, 2)} m²</strong> · palete ≈ ${fmt(rb.palete, 1)}`}
         </p>
         ${tablica(rb.stavke, rb.ukupno)}
       </div>`;
@@ -471,6 +487,10 @@ document.addEventListener('click', e => {
   }
 });
 
+$('#btn-theme').addEventListener('click', () => {
+  state.tema = state.tema === 'dark' ? 'light' : 'dark';
+  update();
+});
 $('#btn-print').addEventListener('click', () => { buildPrint(); window.print(); });
 window.addEventListener('beforeprint', buildPrint);
 

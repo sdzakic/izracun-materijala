@@ -2,10 +2,11 @@
 
 Jednostavna web stranica za okvirni izračun građevinskog materijala:
 
-- **Zidanje blokovima** – odabir standardnih blokova (Porotherm, plinobeton, betonski blok) ili vlastitih dimenzija, unos više zidova i otvora (prozori, vrata). Izračun broja blokova, paleta i veziva (mort / ljepilo).
+- **Zidanje blokovima** – odabir standardnih blokova (Porotherm, plinobeton, betonski blok) ili vlastitih dimenzija. Unos samo dimenzija objekta (duljina, širina, visina) ili detaljno po zidovima i otvorima (prozori, vrata). Izračun broja blokova, paleta i veziva (mort / ljepilo).
 - **Krov** – jednostrešni, dvostrešni ili četverostrešni krov s nagibom i prepustima. Izračun površine krova, crijepa i sljemenjaka, te po želji drvene konstrukcije (rogovi, grede, letve, kontraletve, krovna folija).
 - **Cijene** – unos jediničnih cijena ili potpuno skrivanje cijena (prekidač u zaglavlju).
-- **Ispis** – gumb *Ispiši* daje uredan A4 pregled izračuna (moguće i spremanje u PDF).
+- **Ispis** – gumb *Ispiši* daje uredan A4 pregled izračuna (moguće i spremanje u PDF), uvijek u svijetloj verziji.
+- **Tema** – tamna (zadano) ili svijetla, prekidač u zaglavlju.
 
 Unosi se automatski pamte u pregledniku (localStorage).
 
